@@ -1,0 +1,229 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&display=swap');
+
+:root {
+  --cyber-accent: #00ff88;
+  --cyber-danger: #ff0044;
+  --cyber-warning: #ffaa00;
+  --cyber-info: #00aaff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: linear-gradient(135deg, #0a0a0f 0%, #12121a 50%, #0a0a0f 100%);
+  min-height: 100vh;
+  color: #e0e0e0;
+}
+
+/* Cyberpunk Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a25;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00ff88 0%, #00aaff 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #00ff88 50%, #00aaff 100%);
+}
+
+/* Neon Glow Effects */
+.neon-green {
+  text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88, 0 0 40px #00ff88;
+}
+
+.neon-red {
+  text-shadow: 0 0 10px #ff0044, 0 0 20px #ff0044, 0 0 40px #ff0044;
+}
+
+.neon-blue {
+  text-shadow: 0 0 10px #00aaff, 0 0 20px #00aaff, 0 0 40px #00aaff;
+}
+
+.box-glow-green {
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3), 0 0 20px rgba(0, 255, 136, 0.2), inset 0 0 20px rgba(0, 255, 136, 0.1);
+}
+
+.box-glow-red {
+  box-shadow: 0 0 10px rgba(255, 0, 68, 0.3), 0 0 20px rgba(255, 0, 68, 0.2), inset 0 0 20px rgba(255, 0, 68, 0.1);
+}
+
+/* Grid Background */
+.grid-bg {
+  background-image: 
+    linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Scan Line Effect */
+.scan-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00ff88, transparent);
+  animation: scan 3s linear infinite;
+}
+
+/* Signal Badge Styles */
+.signal-buy {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.2) 0%, rgba(0, 255, 136, 0.1) 100%);
+  border: 2px solid #00ff88;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.4), inset 0 0 20px rgba(0, 255, 136, 0.1);
+}
+
+.signal-sell {
+  background: linear-gradient(135deg, rgba(255, 0, 68, 0.2) 0%, rgba(255, 0, 68, 0.1) 100%);
+  border: 2px solid #ff0044;
+  box-shadow: 0 0 20px rgba(255, 0, 68, 0.4), inset 0 0 20px rgba(255, 0, 68, 0.1);
+}
+
+.signal-hold {
+  background: linear-gradient(135deg, rgba(255, 170, 0, 0.2) 0%, rgba(255, 170, 0, 0.1) 100%);
+  border: 2px solid #ffaa00;
+  box-shadow: 0 0 20px rgba(255, 170, 0, 0.4), inset 0 0 20px rgba(255, 170, 0, 0.1);
+}
+
+/* Confidence Bar */
+.confidence-bar {
+  background: linear-gradient(90deg, #ff0044 0%, #ffaa00 50%, #00ff88 100%);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+/* Terminal Log */
+.terminal-line {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  padding: 0.25rem 0;
+  border-left: 2px solid transparent;
+  padding-left: 0.75rem;
+  margin-left: 0.5rem;
+}
+
+.terminal-line:hover {
+  background: rgba(0, 255, 136, 0.05);
+  border-left-color: #00ff88;
+}
+
+/* Button Styles */
+.btn-cyber {
+  background: linear-gradient(135deg, #1a1a25 0%, #12121a 100%);
+  border: 1px solid #00ff88;
+  color: #00ff88;
+  padding: 0.75rem 1.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-cyber:hover {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3), 0 0 40px rgba(0, 255, 136, 0.1);
+}
+
+.btn-cyber.active {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.2) 0%, rgba(0, 255, 136, 0.1) 100%);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.4), inset 0 0 20px rgba(0, 255, 136, 0.1);
+}
+
+.btn-kill {
+  background: linear-gradient(135deg, rgba(255, 0, 68, 0.2) 0%, rgba(255, 0, 68, 0.1) 100%);
+  border: 2px solid #ff0044;
+  color: #ff0044;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.btn-kill:hover {
+  background: linear-gradient(135deg, rgba(255, 0, 68, 0.3) 0%, rgba(255, 0, 68, 0.2) 100%);
+  box-shadow: 0 0 30px rgba(255, 0, 68, 0.5);
+}
+
+/* Status Indicator */
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-online {
+  background: #00ff88;
+  box-shadow: 0 0 10px #00ff88;
+}
+
+.status-offline {
+  background: #ff0044;
+  box-shadow: 0 0 10px #ff0044;
+}
+
+/* Glitch Effect */
+.glitch {
+  position: relative;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.glitch::before {
+  animation: glitch-1 0.3s infinite linear alternate-reverse;
+  color: #00ff88;
+  z-index: -1;
+}
+
+.glitch::after {
+  animation: glitch-2 0.3s infinite linear alternate-reverse;
+  color: #00aaff;
+  z-index: -2;
+}
+
+@keyframes glitch-1 {
+  0% { clip-path: inset(20% 0 60% 0); transform: translate(-2px, 2px); }
+  20% { clip-path: inset(10% 0 70% 0); transform: translate(2px, -2px); }
+  40% { clip-path: inset(50% 0 30% 0); transform: translate(-2px, 2px); }
+  60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); }
+  80% { clip-path: inset(30% 0 50% 0); transform: translate(-2px, 2px); }
+  100% { clip-path: inset(60% 0 20% 0); transform: translate(2px, -2px); }
+}
+
+@keyframes glitch-2 {
+  0% { clip-path: inset(60% 0 20% 0); transform: translate(2px, -2px); }
+  20% { clip-path: inset(30% 0 50% 0); transform: translate(-2px, 2px); }
+  40% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); }
+  60% { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 2px); }
+  80% { clip-path: inset(50% 0 30% 0); transform: translate(2px, -2px); }
+  100% { clip-path: inset(20% 0 60% 0); transform: translate(-2px, 2px); }
+}
