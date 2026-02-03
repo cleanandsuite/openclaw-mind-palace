@@ -1,11 +1,37 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { Sidebar } from "@/components/Sidebar";
+import { ContentViewer } from "@/components/ContentViewer";
+import { Header } from "@/components/Header";
+import { knowledgeTree, KnowledgeFile } from "@/data/knowledge-tree";
 
 const Index = () => {
+  const [selectedFile, setSelectedFile] = useState<KnowledgeFile | null>(null);
+  const [isSystemPromptSelected, setIsSystemPromptSelected] = useState(false);
+
+  const handleFileSelect = (file: KnowledgeFile) => {
+    setSelectedFile(file);
+    setIsSystemPromptSelected(false);
+  };
+
+  const handleSystemPromptSelect = () => {
+    setSelectedFile(knowledgeTree.systemPrompt);
+    setIsSystemPromptSelected(true);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="flex h-screen bg-background overflow-hidden">
+      <Sidebar
+        selectedFileId={isSystemPromptSelected ? "system-prompt" : selectedFile?.id ?? null}
+        onFileSelect={handleFileSelect}
+        onSystemPromptSelect={handleSystemPromptSelect}
+        isSystemPromptSelected={isSystemPromptSelected}
+      />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header />
+        <ContentViewer 
+          file={selectedFile} 
+          isSystemPrompt={isSystemPromptSelected}
+        />
       </div>
     </div>
   );
