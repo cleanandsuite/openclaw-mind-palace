@@ -394,6 +394,65 @@ AI-powered news aggregation website.
 - **Phase:** Live with OG workaround`
             }
           ]
+        },
+        {
+          id: "sellsig",
+          name: "sellsig",
+          purpose: "AI coaching for sales calls with real-time feedback and system audio capture",
+          color: "workspace",
+          files: [
+            {
+              id: "context",
+              name: "context.md",
+              content: `# Workspace: SellSig (formerly Sales Insights Hub)
+
+## Objective
+
+AI-powered coaching platform for sales calls that listens, coaches, and helps close deals in real-time.
+
+## Tech Stack
+
+- **Frontend:** React + Vite + shadcn-ui + Tailwind CSS
+- **Backend:** Supabase (PostgreSQL)
+- **Audio:** @telnyx/webrtc, @breezystack/lamejs, mp3-mediarecorder
+- **Desktop:** Electron (for system audio capture)
+- **Animations:** GSAP
+- **Testing:** Playwright
+
+## Key Components
+
+- **GritCall Extension**: Browser extension for call recording
+- **GritCall Desktop**: Electron app with system audio capture (records both sides of call)
+- **Twilio Server**: Real-time call processing
+- **Real-time Coaching**: AI whispers perfect responses during calls
+
+## Audio Recording
+
+### Web Version
+- Microphone only
+- Uses WebRTC (Telnyx)
+
+### Desktop (Electron)
+- System audio capture (both sides of call)
+- Uses desktopCapturer API
+- macOS requires Screen Recording permissions
+
+## Credentials (.env)
+
+- SUPABASE_URL, SUPABASE_ANON_KEY
+- TELNYX_API_KEY, TELNYX_APP_ID
+
+## Agency Structure
+
+- **Recruit** → **Agent** (Hunter/Closer/Cultivator/Champion) → **Senior Agent** → **Agency Lead**
+- Role-based access and progression system
+
+## Status
+
+- **Phase:** Development (Electron setup in progress)
+- **Next Milestone:** Complete system audio capture in Electron app`
+            }
+          ]
         }
       ]
     },
