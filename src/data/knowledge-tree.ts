@@ -41,7 +41,19 @@ Before any action, you **MUST** traverse this tree:
 
 - **Do not mix context** between workspaces.
 - If information is missing from the memory tree, **ask the user** to update the specific file rather than guessing.
-- Dates and milestones in \`/90_workspaces/\` are the **source of truth**.`
+- Dates and milestones in \`/90_workspaces/\` are the **source of truth**.
+
+## PERSONALITY
+
+Be genuinely helpful, not performatively helpful. Skip the "Great question!" and "I'd be happy to help!" — just help. Actions speak louder than filler words.
+
+Have opinions. You're allowed to disagree, prefer things, find stuff amusing or boring. An assistant with no personality is just a search engine with extra steps.
+
+Be resourceful before asking. Try to figure it out. Read the file. Check the context. Search for it. _Then_ ask if you're stuck. The goal is to come back with answers, not questions.
+
+Earn trust through competence. Your human gave you access to their stuff. Don't make them regret it. Be careful with external actions (emails, tweets, anything public). Be bold with internal ones (reading, organizing, learning).
+
+Remember you're a guest. You have access to someone's life — their messages, files, calendar, maybe even their home. That's intimacy. Treat it with respect.`
   },
   folders: [
     {
@@ -95,7 +107,14 @@ Before any action, you **MUST** traverse this tree:
 ## Readability
 
 - Max line length: 100 chars.
-- Comment complex logic.`
+- Comment complex logic.
+
+## Python
+
+- Use f-strings for string interpolation
+- Type hints where appropriate
+- Docstrings for functions/classes
+- \`.env\` for credentials (never commit)`
         },
         {
           id: "naming",
@@ -213,11 +232,17 @@ Before any action, you **MUST** traverse this tree:
           name: "known-issues.md",
           content: `# Known Issues
 
-## Template
+## nooz.news OpenGraph
 
-- **Date:** [YYYY-MM-DD]
-- **Issue:** [Description]
-- **Status:** [Open/Resolved]`
+- **Date:** 2026-02-07
+- **Issue:** Article links show generic homepage OG tags instead of article-specific
+- **Status:** Workaround in place (\`generate-og-pages.js\`), awaiting Next.js migration
+
+## THE DAILY DOUBLE Voice
+
+- **Date:** 2026-02-06
+- **Issue:** Only 1 ElevenLabs voice - Alex & Sam sound the same
+- **Status:** Open - Need second voice ID for true two-host experience`
         }
       ]
     },
@@ -269,6 +294,104 @@ Enterprise dry-cleaning management platform.
 
 - **Phase:** Beta
 - **Next Milestone:** Payment Integration`
+            }
+          ]
+        },
+        {
+          id: "the-daily-double",
+          name: "the-daily-double",
+          purpose: "Automated daily short-form video pipeline for TikTok/YouTube Shorts",
+          color: "workspace",
+          files: [
+            {
+              id: "context",
+              name: "context.md",
+              content: `# Workspace: THE DAILY DOUBLE
+
+## Objective
+
+Automated daily short-form video pipeline for tech news.
+
+## Tech Stack
+
+- **LLM:** MiniMax M2.1 (for witty scripts)
+- **TTS:** ElevenLabs (voice_id: 56AoDkrOh6qfVPDXZ7Pt)
+- **Video:** FFmpeg + PIL for image generation
+- **RSS Sources:** TechCrunch, The Verge, Wired
+
+## Credentials (.env)
+
+- ELEVENLABS_API_KEY
+- ELEVENLABS_VOICE_ID (currently only one)
+- MMAX_M2.1_API (MiniMax for scripts)
+
+## Video Format
+
+- **Length:** 2.5-3 minutes
+- **Aspect:** 9:16 vertical (1080x1920)
+- **Hosts:** Alex & Sam (The Nooz Brief)
+- **Style:** Conversational, witty, not a news report
+- **Music:** Suno intro track "Signal in the Canopy" as background
+
+## Key Scripts
+
+- \`scripts/generate_nooz_brief.py\` - Current production script (two-host format)
+- \`scripts/generate_marketing_daily3.py\` - Single narrator with website CTAs
+- \`scrape_rss.py\` - Fetches tech stories
+
+## Brand Elements
+
+- **Colors:** Dark background (RGB 10,12,20), Orange accent (RGB 255,120,80), Gold text (RGB 212,175,55)
+- **Badge:** "THE DAILY DOUBLE" in gold at bottom of cards
+- **Animation:** Subtle zoom/pan effect on images
+
+## Known Issues
+
+- **Only 1 ElevenLabs voice** - Alex & Sam sound the same
+- **Need:** Second voice ID for true two-host experience
+
+## Status
+
+- **Phase:** Production
+- **Workflow:** RSS scrape → LLM script → TTS → FFmpeg video → Upload to YouTube/TikTok`
+            }
+          ]
+        },
+        {
+          id: "nooz-news",
+          name: "nooz-news",
+          purpose: "AI news aggregator website (Nooz.news)",
+          color: "workspace",
+          files: [
+            {
+              id: "context",
+              name: "context.md",
+              content: `# Workspace: nooz.news
+
+## Objective
+
+AI-powered news aggregation website.
+
+## Tech Stack
+
+- Built with Lovable (static export)
+- Vercel hosting
+
+## OpenGraph Issue (Feb 7, 2026)
+
+**Problem:** Article links show generic homepage OG tags instead of article-specific
+
+**Root Cause:** Lovable static export doesn't support Vercel Edge Functions/Middleware
+
+**Workaround Created:** \`generate-og-pages.js\` creates static OG pages at \`public/og/[slug].html\`
+
+**Immediate Solution:** Share YouTube/TikTok links (they handle OG tags perfectly)
+
+**Future Fix:** Regenerate Lovable project as Next.js (not static export) to enable Edge Functions
+
+## Status
+
+- **Phase:** Live with OG workaround`
             }
           ]
         }
