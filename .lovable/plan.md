@@ -1,75 +1,36 @@
 
 
-# CONTREE Memory System -- Gap Analysis and Token Drain Fix
+# Update SellSig Workspace with Current Architecture
 
-## 1. The Token Drain Problem (Critical)
+## What's Changing
 
-The root cause is in `SYSTEM_PROMPT.md`, specifically this directive:
+The current SellSig entry is a bare-bones stub (single `context.md` with outdated info about Electron/GritCall). The user has provided a comprehensive breakdown of the actual system architecture. This update replaces the stub and adds detailed documentation files.
 
-> "Before any action, you MUST traverse this tree:
-> 1. Check /90_workspaces/
-> 2. Check /02_code-style/
-> 3. Check /01_compliance/
-> 4. Check /99_archive/"
+## Approach
 
-This tells OpenClaw to read **every file in every folder on every single message**. With 5 workspaces (and algo-trader alone having 10+ files), that is hundreds of lines consumed before OpenClaw even starts answering. It compounds because the output also includes all that context, creating a read-echo loop that burns through tokens fast.
+Extract the SellSig workspace into its own file at `src/data/workspaces/sellsig.ts` (matching the pattern used for `algo-trader.ts` and `mission-control.ts`), then import it in `knowledge-tree.ts`.
 
-### The Fix: Lazy Loading Protocol
+## New File Structure for SellSig
 
-Rewrite the SYSTEM_PROMPT memory protocol to be **selective**, not exhaustive:
+The workspace will contain these files:
 
-```text
-## MEMORY PROTOCOL (revised)
+1. **context.md** -- Updated overview with current tech stack (Telnyx WebRTC, AssemblyAI v3, Gemini 2.5 Flash, OpenAI GPT-4o-mini/Whisper), key components, coaching styles, agency structure, and current status.
 
-Before any action:
-1. Identify the ACTIVE WORKSPACE from the user's message or conversation context.
-2. Load ONLY that workspace's context.md file.
-3. Load 02_code-style/ and 01_compliance/ ONLY when generating or reviewing code.
-4. Check 99_archive/ ONLY when the user references a deprecated tool or pattern.
+2. **call-system.md** -- The live call pipeline: Telnyx WebRTC initiation, Web Audio API mixing (left/right channel merge), ScriptProcessorNode resampling to 16kHz PCM, streaming to AssemblyAI v3 WebSocket, and real-time transcript handling with turn-based deduplication.
 
-DO NOT pre-load all workspaces. DO NOT read files unrelated to the current task.
-```
+3. **ai-coaching.md** -- Live coaching architecture: LiveCoachingSidebar consuming transcripts, 2-second debounce, live-coach edge function with 5 coaching styles (Discovery Booker, Energy Booster, Layered Closer, High Stakes Closer, Neutral), Gemini 2.5 Flash integration, suggestion rendering with urgency/type badges. Plus the LiveSummaryPanel (10-second polling for structured data extraction).
 
-This alone should cut token usage by 60-80% per interaction.
+4. **post-call-analysis.md** -- The full post-call pipeline: recording save to storage, transcription (Whisper primary / AssemblyAI fallback), GPT-4o-mini full analysis (scores, markers, deal intel), Gemini 2.5 Flash summary (auto-lead creation at >70% confidence, Salesforce sync queue), deal coaching, and pain detection (7 pain categories with severity scoring).
 
----
+5. **model-reference.md** -- Quick-reference table mapping each stage to its model: Whisper/AssemblyAI for transcription, GPT-4o-mini for analysis, Gemini 2.5 Flash for live coaching/summary/deal coaching/pain detection. Plus edge function names and database tables involved.
 
-## 2. Missing Workspaces
+## Technical Steps
 
-Two workspaces exist in `docs/90_workspaces/` but are absent from the knowledge tree data:
+1. **Create** `src/data/workspaces/sellsig.ts` with the `KnowledgeFolder` export containing all 5 files above.
+2. **Update** `src/data/knowledge-tree.ts`:
+   - Add `import { sellsigWorkspace } from "./workspaces/sellsig"` alongside existing workspace imports.
+   - Replace the inline SellSig object (lines 406-444) with `sellsigWorkspace`.
+3. **Update** the workspace purpose string to reflect the current state: "AI-powered sales coaching platform with real-time call analysis, live AI coaching, and post-call intelligence."
 
-- **algo-trader** -- Futures intraday mean reversion strategy with 10+ files (Python scripts, risk protocols, tech stack, backtesting docs, and a `library/` subfolder with pitfalls, risk-math, and strategies)
-- **mission-control** -- A Next.js project with app directory, config files, and README
-
-These need to be added to `knowledge-tree.ts` with their full file contents pulled from the `docs/` directory.
-
----
-
-## 3. Other Gaps
-
-| Gap | Details |
-|-----|---------|
-| **No active workspace indicator** | The SYSTEM_PROMPT says "identify the active project context" but there is no mechanism to set or display which workspace is active. Need a workspace selector in the sidebar or header. |
-| **Code blocks not rendered** | `ContentViewer.tsx` returns `null` for lines starting with triple backticks -- multi-line code blocks are silently dropped. |
-| **Search is name-only** | Sidebar search filters by folder/file names but not file content. A content-level search would be more useful. |
-| **Console warnings** | `Header` passes a ref to `Badge` (a function component) and `Index` passes a ref to `ContentViewer` -- both need `React.forwardRef` or the refs removed. |
-
----
-
-## Implementation Plan
-
-### Step 1: Fix the token drain
-Update the `SYSTEM_PROMPT.md` content in `knowledge-tree.ts` to use lazy/selective loading instead of exhaustive traversal. Add a "COST AWARENESS" section warning against loading unnecessary files.
-
-### Step 2: Add missing workspaces
-Add `algo-trader` and `mission-control` to the `subfolders` array inside the `90-workspaces` folder in `knowledge-tree.ts`. Include all files from the `docs/` directory. The algo-trader workspace will include a `library/` subfolder with its 3 files.
-
-### Step 3: Add active workspace selector
-Add a workspace selector component (dropdown or clickable list) in the sidebar under the System Prompt entry. When a workspace is selected, it visually highlights and the Header shows "Active: [workspace name]". This gives OpenClaw a clear signal of which context to load.
-
-### Step 4: Fix code block rendering
-Update `ContentViewer.tsx` to properly accumulate and render multi-line code blocks (lines between triple backtick pairs) in a styled `<pre><code>` block.
-
-### Step 5: Fix console warnings
-Remove stray refs on `Badge` in `Header.tsx` and `ContentViewer` in `Index.tsx`, or wrap them with `React.forwardRef`.
+No UI changes needed -- the existing tree viewer, ContentViewer (with code block and table rendering), and workspace selector will display the new content automatically.
 
