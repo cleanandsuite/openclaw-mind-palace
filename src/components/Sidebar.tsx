@@ -1,7 +1,7 @@
 import { Brain, Search, FileCode, Sparkles, Crosshair } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { TreeNode } from "./TreeNode";
-import { knowledgeTree, KnowledgeFile, getWorkspaces } from "@/data/knowledge-tree";
+import { knowledgeTree, KnowledgeFile, KnowledgeFolder, getWorkspaces } from "@/data/knowledge-tree";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -25,11 +25,19 @@ export function Sidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const workspaces = getWorkspaces();
 
+  const query = searchQuery.toLowerCase();
+
+  const fileMatchesQuery = (file: KnowledgeFile): boolean =>
+    file.name.toLowerCase().includes(query) ||
+    file.content.toLowerCase().includes(query);
+
+  const folderMatchesQuery = (folder: KnowledgeFolder): boolean =>
+    folder.name.toLowerCase().includes(query) ||
+    folder.files.some(fileMatchesQuery) ||
+    (folder.subfolders?.some(folderMatchesQuery) ?? false);
+
   const filteredFolders = searchQuery
-    ? knowledgeTree.folders.filter(folder => 
-        folder.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        folder.files.some(file => file.name.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
+    ? knowledgeTree.folders.filter(folderMatchesQuery)
     : knowledgeTree.folders;
 
   return (

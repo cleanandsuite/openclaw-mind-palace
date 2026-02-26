@@ -2,6 +2,7 @@ export interface KnowledgeFile {
   id: string;
   name: string;
   content: string;
+  lastUpdated?: string;
 }
 
 export interface KnowledgeFolder {
@@ -52,14 +53,26 @@ Before any action, follow the **Lazy Loading Protocol**:
 
 ### WORKSPACE ROUTING
 
-| If the user mentions... | Load workspace... |
-|------------------------|-------------------|
-| trading, algo, futures, ES, NQ | \`algo-trader\` |
-| dashboard, mission control, signals | \`mission-control\` |
-| dry cleaning, Clean and Suite | \`clean-and-suite\` |
-| video, TikTok, daily double, nooz brief | \`the-daily-double\` |
-| news, nooz.news, OG tags | \`nooz-news\` |
-| sales, SellSig, coaching, calls | \`sellsig\` |
+| If the user mentions... | Load workspace... | Style |
+|------------------------|-------------------|-------|
+| trading, algo, futures, ES, NQ | \`algo-trader\` | Python |
+| dashboard, mission control, signals | \`mission-control\` | TypeScript/Next.js |
+| dry cleaning, Clean and Suite | \`clean-and-suite\` | TypeScript/React |
+| video, TikTok, daily double, nooz brief | \`the-daily-double\` | Python |
+| news, nooz.news, OG tags | \`nooz-news\` | TypeScript/React |
+| sales, SellSig, coaching, calls | \`sellsig\` | TypeScript/React |
+
+**Style Override Rule:** If the active workspace specifies a language/style in the table above, those conventions take precedence over \`02_code-style/\` defaults.
+
+**Ambiguous Query Fallback:** If the workspace cannot be determined from the user's message, ask: "Which project is this for?" Do NOT guess. Do NOT load multiple workspaces.
+
+### FILE DEPTH PROTOCOL
+
+- **Level 1 (always):** Load \`context.md\` only.
+- **Level 2 (when coding):** Load the specific file related to the task (e.g., \`call-system.md\` if the question is about audio capture).
+- **Level 3 (never unprompted):** Don't load \`model-reference.md\` or full analysis docs unless the user explicitly asks.
+
+Do NOT pre-load all files in a workspace. Load on demand.
 
 ## DIRECTIVES
 

@@ -9,6 +9,7 @@ export const sellsigWorkspace: KnowledgeFolder = {
     {
       id: "ss-context",
       name: "context.md",
+      lastUpdated: "2026-02-26",
       content: `# Workspace: SellSig
 
 ## Objective
@@ -57,6 +58,7 @@ Recruit → Agent → Senior Agent → Agency Lead
     {
       id: "ss-call-system",
       name: "call-system.md",
+      lastUpdated: "2026-02-26",
       content: `# Call System Architecture
 
 ## 1. Call Initiation (Telnyx WebRTC)
@@ -98,6 +100,7 @@ The \`twilio-server/\` directory contains a Node.js server for traditional phone
     {
       id: "ss-ai-coaching",
       name: "ai-coaching.md",
+      lastUpdated: "2026-02-26",
       content: `# Live AI Coaching
 
 ## LiveCoachingSidebar
@@ -145,6 +148,7 @@ The user's preferred coaching style is stored in the \`ai_lead_settings\` table 
     {
       id: "ss-post-call",
       name: "post-call-analysis.md",
+      lastUpdated: "2026-02-26",
       content: `# Post-Call Analysis Pipeline
 
 ## 1. Recording Save (Trigger Point)
@@ -245,6 +249,7 @@ The \`RecordingAnalysis\` page (\`/recording/:id\`) assembles everything:
     {
       id: "ss-model-reference",
       name: "model-reference.md",
+      lastUpdated: "2026-02-26",
       content: `# Model & Infrastructure Reference
 
 ## AI Models by Stage
