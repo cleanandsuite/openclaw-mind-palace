@@ -1,36 +1,67 @@
 
 
-# Update SellSig Workspace with Current Architecture
+# CONTREE Hardening -- Reliability Fixes
 
-## What's Changing
+## Problem Summary
 
-The current SellSig entry is a bare-bones stub (single `context.md` with outdated info about Electron/GritCall). The user has provided a comprehensive breakdown of the actual system architecture. This update replaces the stub and adds detailed documentation files.
+Six concrete issues that could cause OpenClaw to load wrong context, use stale data, or burn tokens unnecessarily.
 
-## Approach
+## Fixes
 
-Extract the SellSig workspace into its own file at `src/data/workspaces/sellsig.ts` (matching the pattern used for `algo-trader.ts` and `mission-control.ts`), then import it in `knowledge-tree.ts`.
+### Fix 1: Add `lastUpdated` field to KnowledgeFile
 
-## New File Structure for SellSig
+Add an optional `lastUpdated: string` field to the `KnowledgeFile` interface. Populate it for workspace files. ContentViewer shows it in the file header as "Last updated: YYYY-MM-DD". This lets OpenClaw (and users) know if context might be stale.
 
-The workspace will contain these files:
+### Fix 2: Per-Workspace Style Overrides
 
-1. **context.md** -- Updated overview with current tech stack (Telnyx WebRTC, AssemblyAI v3, Gemini 2.5 Flash, OpenAI GPT-4o-mini/Whisper), key components, coaching styles, agency structure, and current status.
+Add an optional `styleOverrides` section to workspace `context.md` files. For example, algo-trader's context would note "Language: Python" while SellSig notes "Language: TypeScript/React". Update the SYSTEM_PROMPT to say: "If the active workspace specifies style overrides, those take precedence over `02_code-style/`."
 
-2. **call-system.md** -- The live call pipeline: Telnyx WebRTC initiation, Web Audio API mixing (left/right channel merge), ScriptProcessorNode resampling to 16kHz PCM, streaming to AssemblyAI v3 WebSocket, and real-time transcript handling with turn-based deduplication.
+### Fix 3: Persist Active Workspace in localStorage
 
-3. **ai-coaching.md** -- Live coaching architecture: LiveCoachingSidebar consuming transcripts, 2-second debounce, live-coach edge function with 5 coaching styles (Discovery Booker, Energy Booster, Layered Closer, High Stakes Closer, Neutral), Gemini 2.5 Flash integration, suggestion rendering with urgency/type badges. Plus the LiveSummaryPanel (10-second polling for structured data extraction).
+Replace `useState` with a custom hook that reads/writes to `localStorage`. Active workspace survives page reloads.
 
-4. **post-call-analysis.md** -- The full post-call pipeline: recording save to storage, transcription (Whisper primary / AssemblyAI fallback), GPT-4o-mini full analysis (scores, markers, deal intel), Gemini 2.5 Flash summary (auto-lead creation at >70% confidence, Salesforce sync queue), deal coaching, and pain detection (7 pain categories with severity scoring).
+### Fix 4: Deep-File Loading Guidance in SYSTEM_PROMPT
 
-5. **model-reference.md** -- Quick-reference table mapping each stage to its model: Whisper/AssemblyAI for transcription, GPT-4o-mini for analysis, Gemini 2.5 Flash for live coaching/summary/deal coaching/pain detection. Plus edge function names and database tables involved.
+Add a "FILE DEPTH PROTOCOL" section:
+- **Level 1 (always):** Load `context.md` only
+- **Level 2 (when coding):** Load the specific file related to the task (e.g., `call-system.md` if the question is about audio capture)
+- **Level 3 (never unprompted):** Don't load `model-reference.md` or full analysis docs unless asked
 
-## Technical Steps
+This prevents loading all 5 SellSig files when only one is needed.
 
-1. **Create** `src/data/workspaces/sellsig.ts` with the `KnowledgeFolder` export containing all 5 files above.
-2. **Update** `src/data/knowledge-tree.ts`:
-   - Add `import { sellsigWorkspace } from "./workspaces/sellsig"` alongside existing workspace imports.
-   - Replace the inline SellSig object (lines 406-444) with `sellsigWorkspace`.
-3. **Update** the workspace purpose string to reflect the current state: "AI-powered sales coaching platform with real-time call analysis, live AI coaching, and post-call intelligence."
+### Fix 5: Content Search
 
-No UI changes needed -- the existing tree viewer, ContentViewer (with code block and table rendering), and workspace selector will display the new content automatically.
+Update sidebar search to filter through file content, not just names. When a content match is found, show the file under its parent folder with a snippet preview.
+
+### Fix 6: Ambiguous Query Fallback in SYSTEM_PROMPT
+
+Add to the routing section: "If the workspace cannot be determined from the user's message, ask: 'Which project is this for?' Do NOT guess. Do NOT load multiple workspaces."
+
+## Technical Details
+
+### File changes:
+
+1. **`src/data/knowledge-tree.ts`**
+   - Add `lastUpdated?: string` to `KnowledgeFile` interface
+   - Update SYSTEM_PROMPT content with File Depth Protocol and ambiguous query fallback
+   - Add style override notes to workspace routing table
+
+2. **`src/data/workspaces/sellsig.ts`**
+   - Add `lastUpdated: "2026-02-26"` to each file
+
+3. **`src/data/workspaces/algo-trader.ts`**
+   - Add `lastUpdated` to each file
+
+4. **`src/data/workspaces/mission-control.ts`**
+   - Add `lastUpdated` to each file
+
+5. **`src/components/ContentViewer.tsx`**
+   - Show `lastUpdated` in the file header bar when present
+
+6. **`src/components/Sidebar.tsx`**
+   - Update search to filter by content (case-insensitive substring match on `file.content`)
+   - Show matching files even if their parent folder name doesn't match
+
+7. **`src/pages/Index.tsx`**
+   - Replace `useState` for `activeWorkspaceId` with localStorage-backed state
 
