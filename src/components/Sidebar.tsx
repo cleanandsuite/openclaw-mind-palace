@@ -1,9 +1,10 @@
-import { Brain, Search, FileCode, Sparkles, Crosshair } from "lucide-react";
+import { Brain, Search, FileCode, Sparkles, Crosshair, Copy, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { TreeNode } from "./TreeNode";
-import { knowledgeTree, KnowledgeFile, KnowledgeFolder, getWorkspaces } from "@/data/knowledge-tree";
-import { cn } from "@/lib/utils";
+import { knowledgeTree, KnowledgeFile, KnowledgeFolder, getWorkspaces, getWorkspaceBundle } from "@/data/knowledge-tree";
+import { cn, copyToClipboard } from "@/lib/utils";
 import { useState } from "react";
+import { toast } from "sonner";
 
 interface SidebarProps {
   selectedFileId: string | null;
@@ -23,7 +24,19 @@ export function Sidebar({
   onWorkspaceActivate,
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const workspaces = getWorkspaces();
+
+  const handleCopy = async (id: string, text: string) => {
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopiedId(id);
+      toast.success("Copied to clipboard");
+      setTimeout(() => setCopiedId(null), 2000);
+    } else {
+      toast.error("Failed to copy");
+    }
+  };
 
   const query = searchQuery.toLowerCase();
 
@@ -88,7 +101,7 @@ export function Sidebar({
               isSystemPromptSelected ? "text-primary" : "text-muted-foreground"
             )} />
           </div>
-          <div className="text-left">
+          <div className="text-left flex-1">
             <span className={cn(
               "text-sm font-medium block",
               isSystemPromptSelected ? "text-primary" : "text-sidebar-foreground"
@@ -97,6 +110,16 @@ export function Sidebar({
             </span>
             <span className="text-xs text-muted-foreground">Core identity</span>
           </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCopy("system-prompt", knowledgeTree.systemPrompt.content);
+            }}
+            className="p-1 rounded hover:bg-primary/10 transition-colors"
+            title="Copy system prompt"
+          >
+            {copiedId === "system-prompt" ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />}
+          </button>
         </button>
       </div>
 
@@ -123,7 +146,18 @@ export function Sidebar({
                 "w-1.5 h-1.5 rounded-full transition-colors",
                 activeWorkspaceId === ws.id ? "bg-primary" : "bg-muted-foreground/30"
               )} />
-              <span className="font-mono">{ws.name}</span>
+              <span className="font-mono flex-1">{ws.name}</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const bundle = getWorkspaceBundle(ws.id);
+                  if (bundle) handleCopy(`ws-${ws.id}`, bundle);
+                }}
+                className="p-0.5 rounded hover:bg-primary/10 transition-colors"
+                title="Copy all files"
+              >
+                {copiedId === `ws-${ws.id}` ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3 text-muted-foreground hover:text-primary" />}
+              </button>
             </button>
           ))}
         </div>

@@ -1,7 +1,8 @@
-import { FileText, Code, Terminal } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { FileText, Code, Terminal, Copy, Check } from "lucide-react";
+import { cn, copyToClipboard } from "@/lib/utils";
 import { KnowledgeFile } from "@/data/knowledge-tree";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 interface ContentViewerProps {
   file: KnowledgeFile | null;
@@ -78,6 +79,19 @@ function parseTableCells(row: string): string[] {
 
 export function ContentViewer({ file, isSystemPrompt }: ContentViewerProps) {
   const parsed = useMemo(() => file ? parseLines(file.content) : [], [file]);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    if (!file) return;
+    const ok = await copyToClipboard(file.content);
+    if (ok) {
+      setCopied(true);
+      toast.success("Copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    } else {
+      toast.error("Failed to copy");
+    }
+  };
 
   if (!file) {
     return (
@@ -128,6 +142,14 @@ export function ContentViewer({ file, isSystemPrompt }: ContentViewerProps) {
             <p className="text-xs text-muted-foreground">Last updated: {file.lastUpdated}</p>
           )}
         </div>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 hover:bg-primary/10 text-muted-foreground hover:text-primary"
+          title="Copy raw markdown"
+        >
+          {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+          {copied ? "Copied" : "Copy"}
+        </button>
       </div>
 
       {/* Content area */}
