@@ -452,3 +452,29 @@ export function getWorkspaces(): { id: string; name: string; purpose: string }[]
     purpose: ws.purpose,
   }));
 }
+
+// Helper to concatenate all files in a workspace into a single markdown bundle
+function collectFiles(folder: KnowledgeFolder): KnowledgeFile[] {
+  const files = [...folder.files];
+  if (folder.subfolders) {
+    for (const sub of folder.subfolders) {
+      files.push(...collectFiles(sub));
+    }
+  }
+  return files;
+}
+
+export function getWorkspaceBundle(workspaceId: string): string | null {
+  const workspacesFolder = knowledgeTree.folders.find(f => f.id === "90-workspaces");
+  const ws = workspacesFolder?.subfolders?.find(s => s.id === workspaceId);
+  if (!ws) return null;
+
+  const allFiles = collectFiles(ws);
+  if (allFiles.length === 0) return null;
+
+  const parts = [`# WORKSPACE: ${ws.name}\n`];
+  for (const file of allFiles) {
+    parts.push(`---\n## FILE: ${file.name}\n${file.content}`);
+  }
+  return parts.join('\n');
+}
