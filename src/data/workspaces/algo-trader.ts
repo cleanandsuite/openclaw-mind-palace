@@ -9,6 +9,7 @@ export const algoTraderWorkspace: KnowledgeFolder = {
     {
       id: "algo-context",
       name: "context.md",
+      lastUpdated: "2026-02-03",
       content: `# AlgoTrader - Context Protocol
 
 **Version:** 1.0.0
@@ -84,6 +85,7 @@ Primary mandate: Capture alpha through systematic mean reversion in futures mark
     {
       id: "algo-risk-protocols",
       name: "risk-protocols.md",
+      lastUpdated: "2026-02-03",
       content: `# AlgoTrader - Risk Protocols
 
 **Version:** 1.0.0
@@ -145,6 +147,7 @@ class KillSwitch:
     {
       id: "algo-tech-stack",
       name: "tech-stack.md",
+      lastUpdated: "2026-02-03",
       content: `# AlgoTrader - Tech Stack
 
 **Version:** 1.0.0
@@ -188,6 +191,7 @@ class KillSwitch:
     {
       id: "algo-system-integration",
       name: "SYSTEM_INTEGRATION.md",
+      lastUpdated: "2026-02-03",
       content: `# AlgoTrader System - Complete Integration Guide
 
 **Version:** 1.0.0
@@ -231,6 +235,7 @@ PERFORMANCE AUDITOR          DATA_BRIDGE (Feed)
     {
       id: "algo-backtesting",
       name: "phase-5-backtesting.md",
+      lastUpdated: "2026-02-03",
       content: `# AlgoTrader - Phase 5: Backtesting & Validation
 
 **Version:** 1.0.0
@@ -285,6 +290,7 @@ PERFORMANCE AUDITOR          DATA_BRIDGE (Feed)
         {
           id: "algo-strategies",
           name: "strategies.md",
+          lastUpdated: "2026-02-03",
           content: `# AlgoTrader - Library: Strategies
 
 **Classification:** CORE DOCTRINE
@@ -328,6 +334,7 @@ PERFORMANCE AUDITOR          DATA_BRIDGE (Feed)
         {
           id: "algo-risk-math",
           name: "risk-math.md",
+          lastUpdated: "2026-02-03",
           content: `# AlgoTrader - Library: Risk Math
 
 **Classification:** CORE DOCTRINE
@@ -365,6 +372,7 @@ PERFORMANCE AUDITOR          DATA_BRIDGE (Feed)
         {
           id: "algo-pitfalls",
           name: "pitfalls.md",
+          lastUpdated: "2026-02-03",
           content: `# AlgoTrader - Library: Pitfalls
 
 **Classification:** CORE DOCTRINE - CRITICAL

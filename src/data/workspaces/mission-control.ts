@@ -9,6 +9,7 @@ export const missionControlWorkspace: KnowledgeFolder = {
     {
       id: "mc-readme",
       name: "README.md",
+      lastUpdated: "2026-02-03",
       content: `# OpenClaw Mission Control
 
 A cyberpunk-styled React/Next.js dashboard for monitoring and controlling the AlgoTrader algorithmic trading system.

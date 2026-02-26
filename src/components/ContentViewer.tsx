@@ -114,7 +114,7 @@ export function ContentViewer({ file, isSystemPrompt }: ContentViewerProps) {
             <FileText className="h-4 w-4 text-muted-foreground" />
           )}
         </div>
-        <div>
+        <div className="flex-1">
           <h2 className={cn(
             "font-mono text-sm font-semibold",
             isSystemPrompt ? "text-gradient" : "text-foreground"
@@ -123,6 +123,9 @@ export function ContentViewer({ file, isSystemPrompt }: ContentViewerProps) {
           </h2>
           {isSystemPrompt && (
             <p className="text-xs text-muted-foreground">System Identity & Memory Protocol</p>
+          )}
+          {!isSystemPrompt && file.lastUpdated && (
+            <p className="text-xs text-muted-foreground">Last updated: {file.lastUpdated}</p>
           )}
         </div>
       </div>
