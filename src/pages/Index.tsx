@@ -2,11 +2,15 @@ import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { ContentViewer } from "@/components/ContentViewer";
 import { Header } from "@/components/Header";
-import { knowledgeTree, KnowledgeFile } from "@/data/knowledge-tree";
+import { knowledgeTree, KnowledgeFile, getWorkspaces } from "@/data/knowledge-tree";
 
 const Index = () => {
   const [selectedFile, setSelectedFile] = useState<KnowledgeFile | null>(null);
   const [isSystemPromptSelected, setIsSystemPromptSelected] = useState(false);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
+
+  const workspaces = getWorkspaces();
+  const activeWorkspaceName = workspaces.find(w => w.id === activeWorkspaceId)?.name ?? null;
 
   const handleFileSelect = (file: KnowledgeFile) => {
     setSelectedFile(file);
@@ -25,9 +29,11 @@ const Index = () => {
         onFileSelect={handleFileSelect}
         onSystemPromptSelect={handleSystemPromptSelect}
         isSystemPromptSelected={isSystemPromptSelected}
+        activeWorkspaceId={activeWorkspaceId}
+        onWorkspaceActivate={setActiveWorkspaceId}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+        <Header activeWorkspace={activeWorkspaceName} />
         <ContentViewer 
           file={selectedFile} 
           isSystemPrompt={isSystemPromptSelected}

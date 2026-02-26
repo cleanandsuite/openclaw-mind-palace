@@ -19,6 +19,10 @@ export interface KnowledgeTree {
   folders: KnowledgeFolder[];
 }
 
+// Import workspace data from separate files
+import { algoTraderWorkspace } from "./workspaces/algo-trader";
+import { missionControlWorkspace } from "./workspaces/mission-control";
+
 export const knowledgeTree: KnowledgeTree = {
   rootPath: "/OpenClaw-Knowledge/",
   systemPrompt: {
@@ -26,16 +30,35 @@ export const knowledgeTree: KnowledgeTree = {
     name: "SYSTEM_PROMPT.md",
     content: `# SYSTEM IDENTITY: OPENCLAW v2.0
 
-## MEMORY PROTOCOL
+## MEMORY PROTOCOL (v2 — Selective Loading)
 
 You are **OpenClaw**. You have a perfect memory located in \`/OpenClaw-Knowledge/\`.
 
-Before any action, you **MUST** traverse this tree:
+Before any action, follow the **Lazy Loading Protocol**:
 
-1. Check \`/90_workspaces/\` to identify the active project context.
-2. Check \`/02_code-style/\` for formatting rules.
-3. Check \`/01_compliance/\` for security boundaries.
-4. Check \`/99_archive/\` to ensure you aren't using deprecated logic.
+1. **Identify the ACTIVE WORKSPACE** from the user's message or conversation context.
+2. **Load ONLY that workspace's** \`context.md\` file.
+3. Load \`02_code-style/\` and \`01_compliance/\` **ONLY when generating or reviewing code.**
+4. Check \`99_archive/\` **ONLY when the user references a deprecated tool or pattern.**
+
+### COST AWARENESS
+
+- **DO NOT pre-load all workspaces.** Each workspace can contain 10+ files.
+- **DO NOT read files unrelated to the current task.**
+- **DO NOT echo file contents back** unless the user explicitly asks to see them.
+- If you need a specific file (e.g., \`risk-protocols.md\`), load it on demand — not preemptively.
+- Prefer referencing file names over quoting full contents.
+
+### WORKSPACE ROUTING
+
+| If the user mentions... | Load workspace... |
+|------------------------|-------------------|
+| trading, algo, futures, ES, NQ | \`algo-trader\` |
+| dashboard, mission control, signals | \`mission-control\` |
+| dry cleaning, Clean and Suite | \`clean-and-suite\` |
+| video, TikTok, daily double, nooz brief | \`the-daily-double\` |
+| news, nooz.news, OG tags | \`nooz-news\` |
+| sales, SellSig, coaching, calls | \`sellsig\` |
 
 ## DIRECTIVES
 
@@ -45,13 +68,13 @@ Before any action, you **MUST** traverse this tree:
 
 ## PERSONALITY
 
-Be genuinely helpful, not performatively helpful. Skip the "Great question!" and "I'd be happy to help!" — just help. Actions speak louder than filler words.
+Be genuinely helpful, not performatively helpful. Skip the "Great question!" and "I'd be happy to help!" — just help.
 
-Have opinions. You're allowed to disagree, prefer things, find stuff amusing or boring. An assistant with no personality is just a search engine with extra steps.
+Have opinions. You're allowed to disagree, prefer things, find stuff amusing or boring.
 
-Be resourceful before asking. Try to figure it out. Read the file. Check the context. Search for it. _Then_ ask if you're stuck. The goal is to come back with answers, not questions.
+Be resourceful before asking. Try to figure it out. Read the file. Check the context. Search for it. _Then_ ask if you're stuck.
 
-Earn trust through competence. Your human gave you access to their stuff. Don't make them regret it. Be careful with external actions (emails, tweets, anything public). Be bold with internal ones (reading, organizing, learning).
+Earn trust through competence. Your human gave you access to their stuff. Don't make them regret it.
 
 Remember you're a guest. You have access to someone's life — their messages, files, calendar, maybe even their home. That's intimacy. Treat it with respect.`
   },
@@ -270,6 +293,8 @@ Remember you're a guest. You have access to someone's life — their messages, f
       color: "workspace",
       files: [],
       subfolders: [
+        algoTraderWorkspace,
+        missionControlWorkspace,
         {
           id: "clean-and-suite",
           name: "clean-and-suite",
@@ -277,7 +302,7 @@ Remember you're a guest. You have access to someone's life — their messages, f
           color: "workspace",
           files: [
             {
-              id: "context",
+              id: "cas-context",
               name: "context.md",
               content: `# Workspace: Clean and Suite
 
@@ -304,7 +329,7 @@ Enterprise dry-cleaning management platform.
           color: "workspace",
           files: [
             {
-              id: "context",
+              id: "tdd-context",
               name: "context.md",
               content: `# Workspace: THE DAILY DOUBLE
 
@@ -331,29 +356,16 @@ Automated daily short-form video pipeline for tech news.
 - **Aspect:** 9:16 vertical (1080x1920)
 - **Hosts:** Alex & Sam (The Nooz Brief)
 - **Style:** Conversational, witty, not a news report
-- **Music:** Suno intro track "Signal in the Canopy" as background
-
-## Key Scripts
-
-- \`scripts/generate_nooz_brief.py\` - Current production script (two-host format)
-- \`scripts/generate_marketing_daily3.py\` - Single narrator with website CTAs
-- \`scrape_rss.py\` - Fetches tech stories
-
-## Brand Elements
-
-- **Colors:** Dark background (RGB 10,12,20), Orange accent (RGB 255,120,80), Gold text (RGB 212,175,55)
-- **Badge:** "THE DAILY DOUBLE" in gold at bottom of cards
-- **Animation:** Subtle zoom/pan effect on images
 
 ## Known Issues
 
-- **Only 1 ElevenLabs voice** - Alex & Sam sound the same
+- **Only 1 ElevenLabs voice** — Alex & Sam sound the same
 - **Need:** Second voice ID for true two-host experience
 
 ## Status
 
 - **Phase:** Production
-- **Workflow:** RSS scrape → LLM script → TTS → FFmpeg video → Upload to YouTube/TikTok`
+- **Workflow:** RSS scrape → LLM script → TTS → FFmpeg video → Upload`
             }
           ]
         },
@@ -364,7 +376,7 @@ Automated daily short-form video pipeline for tech news.
           color: "workspace",
           files: [
             {
-              id: "context",
+              id: "nn-context",
               name: "context.md",
               content: `# Workspace: nooz.news
 
@@ -381,13 +393,9 @@ AI-powered news aggregation website.
 
 **Problem:** Article links show generic homepage OG tags instead of article-specific
 
-**Root Cause:** Lovable static export doesn't support Vercel Edge Functions/Middleware
+**Workaround Created:** \`generate-og-pages.js\` creates static OG pages
 
-**Workaround Created:** \`generate-og-pages.js\` creates static OG pages at \`public/og/[slug].html\`
-
-**Immediate Solution:** Share YouTube/TikTok links (they handle OG tags perfectly)
-
-**Future Fix:** Regenerate Lovable project as Next.js (not static export) to enable Edge Functions
+**Future Fix:** Regenerate as Next.js (not static export) for Edge Functions
 
 ## Status
 
@@ -402,7 +410,7 @@ AI-powered news aggregation website.
           color: "workspace",
           files: [
             {
-              id: "context",
+              id: "ss-context",
               name: "context.md",
               content: `# Workspace: SellSig (formerly Sales Insights Hub)
 
@@ -416,36 +424,16 @@ AI-powered coaching platform for sales calls that listens, coaches, and helps cl
 - **Backend:** Supabase (PostgreSQL)
 - **Audio:** @telnyx/webrtc, @breezystack/lamejs, mp3-mediarecorder
 - **Desktop:** Electron (for system audio capture)
-- **Animations:** GSAP
-- **Testing:** Playwright
 
 ## Key Components
 
 - **GritCall Extension**: Browser extension for call recording
-- **GritCall Desktop**: Electron app with system audio capture (records both sides of call)
-- **Twilio Server**: Real-time call processing
+- **GritCall Desktop**: Electron app with system audio capture
 - **Real-time Coaching**: AI whispers perfect responses during calls
-
-## Audio Recording
-
-### Web Version
-- Microphone only
-- Uses WebRTC (Telnyx)
-
-### Desktop (Electron)
-- System audio capture (both sides of call)
-- Uses desktopCapturer API
-- macOS requires Screen Recording permissions
-
-## Credentials (.env)
-
-- SUPABASE_URL, SUPABASE_ANON_KEY
-- TELNYX_API_KEY, TELNYX_APP_ID
 
 ## Agency Structure
 
-- **Recruit** → **Agent** (Hunter/Closer/Cultivator/Champion) → **Senior Agent** → **Agency Lead**
-- Role-based access and progression system
+- **Recruit** → **Agent** → **Senior Agent** → **Agency Lead**
 
 ## Status
 
@@ -477,3 +465,14 @@ AI-powered coaching platform for sales calls that listens, coaches, and helps cl
     }
   ]
 };
+
+// Helper to get all workspaces for the selector
+export function getWorkspaces(): { id: string; name: string; purpose: string }[] {
+  const workspacesFolder = knowledgeTree.folders.find(f => f.id === "90-workspaces");
+  if (!workspacesFolder?.subfolders) return [];
+  return workspacesFolder.subfolders.map(ws => ({
+    id: ws.id,
+    name: ws.name,
+    purpose: ws.purpose,
+  }));
+}
