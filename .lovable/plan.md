@@ -1,67 +1,71 @@
 
+# Export & Copy Tools for OpenClaw Integration
 
-# CONTREE Hardening -- Reliability Fixes
+## Problem
 
-## Problem Summary
+OpenClaw consumes CONTREE content via copy-paste into project rules (e.g., Cursor rules, Windsurf rules). But the app has no copy functionality -- users must manually select text from the rendered markdown, which loses formatting and is error-prone with code blocks and tables.
 
-Six concrete issues that could cause OpenClaw to load wrong context, use stale data, or burn tokens unnecessarily.
+## Solution
 
-## Fixes
+Add two copy mechanisms that output clean, raw markdown ready for pasting:
 
-### Fix 1: Add `lastUpdated` field to KnowledgeFile
+### 1. Copy Single File Button
 
-Add an optional `lastUpdated: string` field to the `KnowledgeFile` interface. Populate it for workspace files. ContentViewer shows it in the file header as "Last updated: YYYY-MM-DD". This lets OpenClaw (and users) know if context might be stale.
+Add a "Copy" button to the `ContentViewer` header bar (next to the file name and lastUpdated badge). Clicking it copies the raw `file.content` string to the clipboard and shows a toast confirmation.
 
-### Fix 2: Per-Workspace Style Overrides
+This handles the common case: "I need to paste `call-system.md` into my SellSig project rules."
 
-Add an optional `styleOverrides` section to workspace `context.md` files. For example, algo-trader's context would note "Language: Python" while SellSig notes "Language: TypeScript/React". Update the SYSTEM_PROMPT to say: "If the active workspace specifies style overrides, those take precedence over `02_code-style/`."
+### 2. Copy Workspace Bundle Button
 
-### Fix 3: Persist Active Workspace in localStorage
+Add a "Copy All" button to the workspace section in the sidebar (next to the workspace activate toggle). This concatenates all files in the workspace into a single markdown document with clear separators:
 
-Replace `useState` with a custom hook that reads/writes to `localStorage`. Active workspace survives page reloads.
+```text
+# WORKSPACE: sellsig
 
-### Fix 4: Deep-File Loading Guidance in SYSTEM_PROMPT
+---
+## FILE: context.md
+[content]
 
-Add a "FILE DEPTH PROTOCOL" section:
-- **Level 1 (always):** Load `context.md` only
-- **Level 2 (when coding):** Load the specific file related to the task (e.g., `call-system.md` if the question is about audio capture)
-- **Level 3 (never unprompted):** Don't load `model-reference.md` or full analysis docs unless asked
+---
+## FILE: call-system.md
+[content]
 
-This prevents loading all 5 SellSig files when only one is needed.
+---
+## FILE: ai-coaching.md
+[content]
+...
+```
 
-### Fix 5: Content Search
+This handles the bootstrap case: "I'm setting up a new project and need all SellSig context at once."
 
-Update sidebar search to filter through file content, not just names. When a content match is found, show the file under its parent folder with a snippet preview.
+### 3. Copy System Prompt Button
 
-### Fix 6: Ambiguous Query Fallback in SYSTEM_PROMPT
-
-Add to the routing section: "If the workspace cannot be determined from the user's message, ask: 'Which project is this for?' Do NOT guess. Do NOT load multiple workspaces."
+Add a copy button next to the System Prompt entry in the sidebar. This is the most important one -- the SYSTEM_PROMPT.md is what goes into every project's rules to teach OpenClaw how to use the memory system.
 
 ## Technical Details
 
-### File changes:
+### New utility function in `src/lib/utils.ts`
 
-1. **`src/data/knowledge-tree.ts`**
-   - Add `lastUpdated?: string` to `KnowledgeFile` interface
-   - Update SYSTEM_PROMPT content with File Depth Protocol and ambiguous query fallback
-   - Add style override notes to workspace routing table
+```typescript
+export async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+```
 
-2. **`src/data/workspaces/sellsig.ts`**
-   - Add `lastUpdated: "2026-02-26"` to each file
+### File changes
 
-3. **`src/data/workspaces/algo-trader.ts`**
-   - Add `lastUpdated` to each file
+1. **`src/lib/utils.ts`** -- Add `copyToClipboard` helper
+2. **`src/components/ContentViewer.tsx`** -- Add copy button in the header bar, using the raw `file.content` value (not the rendered HTML)
+3. **`src/components/Sidebar.tsx`** -- Add copy buttons:
+   - Next to the System Prompt entry (copies `knowledgeTree.systemPrompt.content`)
+   - Next to each workspace name (copies concatenated bundle of all files in that workspace)
+4. **`src/data/knowledge-tree.ts`** -- Add a `getWorkspaceBundle(workspaceId: string): string` helper that concatenates all files with separators
 
-4. **`src/data/workspaces/mission-control.ts`**
-   - Add `lastUpdated` to each file
+### Toast feedback
 
-5. **`src/components/ContentViewer.tsx`**
-   - Show `lastUpdated` in the file header bar when present
-
-6. **`src/components/Sidebar.tsx`**
-   - Update search to filter by content (case-insensitive substring match on `file.content`)
-   - Show matching files even if their parent folder name doesn't match
-
-7. **`src/pages/Index.tsx`**
-   - Replace `useState` for `activeWorkspaceId` with localStorage-backed state
-
+Uses the existing `sonner` toast to show "Copied to clipboard" or "Failed to copy" messages. No new dependencies needed.
