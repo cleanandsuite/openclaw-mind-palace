@@ -1,7 +1,12 @@
-import { Activity, GitBranch, Clock } from "lucide-react";
+import { Activity, GitBranch, Clock, Crosshair } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
-export function Header() {
+interface HeaderProps {
+  activeWorkspace?: string | null;
+}
+
+export function Header({ activeWorkspace }: HeaderProps) {
   return (
     <header className="h-12 bg-card border-b border-border flex items-center justify-between px-4">
       <div className="flex items-center gap-4">
@@ -14,6 +19,15 @@ export function Header() {
           <Activity className="h-3 w-3 mr-1" />
           Brain Active
         </Badge>
+        {activeWorkspace && (
+          <>
+            <div className="h-4 w-px bg-border" />
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-xs">
+              <Crosshair className="h-3 w-3 mr-1" />
+              Active: {activeWorkspace}
+            </Badge>
+          </>
+        )}
       </div>
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground">

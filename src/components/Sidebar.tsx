@@ -1,7 +1,7 @@
-import { Brain, Search, FileCode, Sparkles } from "lucide-react";
+import { Brain, Search, FileCode, Sparkles, Crosshair } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { TreeNode } from "./TreeNode";
-import { knowledgeTree, KnowledgeFile } from "@/data/knowledge-tree";
+import { knowledgeTree, KnowledgeFile, getWorkspaces } from "@/data/knowledge-tree";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -10,15 +10,20 @@ interface SidebarProps {
   onFileSelect: (file: KnowledgeFile) => void;
   onSystemPromptSelect: () => void;
   isSystemPromptSelected: boolean;
+  activeWorkspaceId: string | null;
+  onWorkspaceActivate: (id: string | null) => void;
 }
 
 export function Sidebar({ 
   selectedFileId, 
   onFileSelect, 
   onSystemPromptSelect,
-  isSystemPromptSelected 
+  isSystemPromptSelected,
+  activeWorkspaceId,
+  onWorkspaceActivate,
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const workspaces = getWorkspaces();
 
   const filteredFolders = searchQuery
     ? knowledgeTree.folders.filter(folder => 
@@ -85,6 +90,35 @@ export function Sidebar({
             <span className="text-xs text-muted-foreground">Core identity</span>
           </div>
         </button>
+      </div>
+
+      {/* Active Workspace Selector */}
+      <div className="px-3 py-2 border-b border-sidebar-border">
+        <div className="flex items-center gap-2 px-2 mb-2">
+          <Crosshair className="h-3.5 w-3.5 text-primary" />
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Workspace</span>
+        </div>
+        <div className="space-y-0.5">
+          {workspaces.map((ws) => (
+            <button
+              key={ws.id}
+              onClick={() => onWorkspaceActivate(activeWorkspaceId === ws.id ? null : ws.id)}
+              className={cn(
+                "w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-left text-xs transition-all duration-200",
+                "hover:bg-primary/10",
+                activeWorkspaceId === ws.id 
+                  ? "bg-primary/15 text-primary border border-primary/30" 
+                  : "text-muted-foreground"
+              )}
+            >
+              <div className={cn(
+                "w-1.5 h-1.5 rounded-full transition-colors",
+                activeWorkspaceId === ws.id ? "bg-primary" : "bg-muted-foreground/30"
+              )} />
+              <span className="font-mono">{ws.name}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tree View */}
