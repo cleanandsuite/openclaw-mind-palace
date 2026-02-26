@@ -22,6 +22,7 @@ export interface KnowledgeTree {
 // Import workspace data from separate files
 import { algoTraderWorkspace } from "./workspaces/algo-trader";
 import { missionControlWorkspace } from "./workspaces/mission-control";
+import { sellsigWorkspace } from "./workspaces/sellsig";
 
 export const knowledgeTree: KnowledgeTree = {
   rootPath: "/OpenClaw-Knowledge/",
@@ -403,45 +404,7 @@ AI-powered news aggregation website.
             }
           ]
         },
-        {
-          id: "sellsig",
-          name: "sellsig",
-          purpose: "AI coaching for sales calls with real-time feedback and system audio capture",
-          color: "workspace",
-          files: [
-            {
-              id: "ss-context",
-              name: "context.md",
-              content: `# Workspace: SellSig (formerly Sales Insights Hub)
-
-## Objective
-
-AI-powered coaching platform for sales calls that listens, coaches, and helps close deals in real-time.
-
-## Tech Stack
-
-- **Frontend:** React + Vite + shadcn-ui + Tailwind CSS
-- **Backend:** Supabase (PostgreSQL)
-- **Audio:** @telnyx/webrtc, @breezystack/lamejs, mp3-mediarecorder
-- **Desktop:** Electron (for system audio capture)
-
-## Key Components
-
-- **GritCall Extension**: Browser extension for call recording
-- **GritCall Desktop**: Electron app with system audio capture
-- **Real-time Coaching**: AI whispers perfect responses during calls
-
-## Agency Structure
-
-- **Recruit** → **Agent** → **Senior Agent** → **Agency Lead**
-
-## Status
-
-- **Phase:** Development (Electron setup in progress)
-- **Next Milestone:** Complete system audio capture in Electron app`
-            }
-          ]
-        }
+        sellsigWorkspace
       ]
     },
     {
