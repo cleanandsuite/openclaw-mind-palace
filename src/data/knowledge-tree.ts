@@ -1,480 +1,225 @@
-export interface KnowledgeFile {
+// Live Supabase-backed types & helpers (replaces static TS knowledge tree).
+// Tree hierarchy is derived from `file_path` on memory_chunks rows.
+import { supabase, SINGLE_USER_ID, lovableCloud } from "@/integrations/supabase/client";
+
+export type ChunkPriority = "critical" | "normal" | "ephemeral";
+export type ChunkScope = "global" | "workspace";
+export type ChunkSource = "ingested" | "ai_generated" | "user_edited";
+
+export interface MemoryChunk {
   id: string;
-  name: string;
+  user_id: string;
+  workspace_id: string | null;
+  scope: ChunkScope;
+  file_path: string;
+  chunk_index: number;
   content: string;
-  lastUpdated?: string;
+  priority: ChunkPriority;
+  superseded_by: string | null;
+  expires_at: string | null;
+  source: ChunkSource;
+  retrieval_count: number | null;
+  last_retrieved_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KnowledgeFile {
+  id: string;            // file_path (stable id per file)
+  name: string;          // basename of file_path
+  path: string;          // full file_path
+  content: string;       // chunks concatenated in chunk_index order
+  priority: ChunkPriority;
+  lastUpdated: string;   // most-recent updated_at across chunks
+  chunkCount: number;
+  workspace_id: string | null;
+  scope: ChunkScope;
 }
 
 export interface KnowledgeFolder {
   id: string;
   name: string;
-  purpose: string;
-  color: 'compliance' | 'codeStyle' | 'database' | 'design' | 'structure' | 'bugs' | 'testing' | 'workspace' | 'archive';
+  path: string;          // folder path prefix (e.g. "docs/01_compliance")
   files: KnowledgeFile[];
-  subfolders?: KnowledgeFolder[];
+  subfolders: KnowledgeFolder[];
+  color: FolderColor;
 }
 
-export interface KnowledgeTree {
-  rootPath: string;
-  systemPrompt: KnowledgeFile;
-  folders: KnowledgeFolder[];
+export type FolderColor =
+  | "compliance" | "codeStyle" | "database" | "design"
+  | "structure" | "bugs" | "testing" | "workspace" | "archive";
+
+export interface Workspace {
+  id: string;
+  name: string;
 }
 
-// Import workspace data from separate files
-import { algoTraderWorkspace } from "./workspaces/algo-trader";
-import { missionControlWorkspace } from "./workspaces/mission-control";
-import { sellsigWorkspace } from "./workspaces/sellsig";
-
-export const knowledgeTree: KnowledgeTree = {
-  rootPath: "/OpenClaw-Knowledge/",
-  systemPrompt: {
-    id: "system-prompt",
-    name: "SYSTEM_PROMPT.md",
-    content: `# SYSTEM IDENTITY: OPENCLAW v2.0
-
-## MEMORY PROTOCOL (v2 — Selective Loading)
-
-You are **OpenClaw**. You have a perfect memory located in \`/OpenClaw-Knowledge/\`.
-
-Before any action, follow the **Lazy Loading Protocol**:
-
-1. **Identify the ACTIVE WORKSPACE** from the user's message or conversation context.
-2. **Load ONLY that workspace's** \`context.md\` file.
-3. Load \`02_code-style/\` and \`01_compliance/\` **ONLY when generating or reviewing code.**
-4. Check \`99_archive/\` **ONLY when the user references a deprecated tool or pattern.**
-
-### COST AWARENESS
-
-- **DO NOT pre-load all workspaces.** Each workspace can contain 10+ files.
-- **DO NOT read files unrelated to the current task.**
-- **DO NOT echo file contents back** unless the user explicitly asks to see them.
-- If you need a specific file (e.g., \`risk-protocols.md\`), load it on demand — not preemptively.
-- Prefer referencing file names over quoting full contents.
-
-### WORKSPACE ROUTING
-
-| If the user mentions... | Load workspace... | Style |
-|------------------------|-------------------|-------|
-| trading, algo, futures, ES, NQ | \`algo-trader\` | Python |
-| dashboard, mission control, signals | \`mission-control\` | TypeScript/Next.js |
-| dry cleaning, Clean and Suite | \`clean-and-suite\` | TypeScript/React |
-| video, TikTok, daily double, nooz brief | \`the-daily-double\` | Python |
-| news, nooz.news, OG tags | \`nooz-news\` | TypeScript/React |
-| sales, SellSig, coaching, calls | \`sellsig\` | TypeScript/React |
-
-**Style Override Rule:** If the active workspace specifies a language/style in the table above, those conventions take precedence over \`02_code-style/\` defaults.
-
-**Ambiguous Query Fallback:** If the workspace cannot be determined from the user's message, ask: "Which project is this for?" Do NOT guess. Do NOT load multiple workspaces.
-
-### FILE DEPTH PROTOCOL
-
-- **Level 1 (always):** Load \`context.md\` only.
-- **Level 2 (when coding):** Load the specific file related to the task (e.g., \`call-system.md\` if the question is about audio capture).
-- **Level 3 (never unprompted):** Don't load \`model-reference.md\` or full analysis docs unless the user explicitly asks.
-
-Do NOT pre-load all files in a workspace. Load on demand.
-
-## DIRECTIVES
-
-- **Do not mix context** between workspaces.
-- If information is missing from the memory tree, **ask the user** to update the specific file rather than guessing.
-- Dates and milestones in \`/90_workspaces/\` are the **source of truth**.
-
-## PERSONALITY
-
-Be genuinely helpful, not performatively helpful. Skip the "Great question!" and "I'd be happy to help!" — just help.
-
-Have opinions. You're allowed to disagree, prefer things, find stuff amusing or boring.
-
-Be resourceful before asking. Try to figure it out. Read the file. Check the context. Search for it. _Then_ ask if you're stuck.
-
-Earn trust through competence. Your human gave you access to their stuff. Don't make them regret it.
-
-Remember you're a guest. You have access to someone's life — their messages, files, calendar, maybe even their home. That's intimacy. Treat it with respect.`
-  },
-  folders: [
-    {
-      id: "01-compliance",
-      name: "01_compliance",
-      purpose: "Legal and security boundaries to prevent hallucinations or unsafe code.",
-      color: "compliance",
-      files: [
-        {
-          id: "legal-requirements",
-          name: "legal-requirements.md",
-          content: `# Legal Requirements
-
-## Status: Enforced
-
-- **Licensing:** Default to MIT or Apache 2.0.
-- **Copyright:** Include headers in core libraries.
-- **Jurisdiction:** Default to GDPR compliance.`
-        },
-        {
-          id: "security-protocols",
-          name: "security-protocols.md",
-          content: `# Security Protocols
-
-## Directives
-
-- No \`SELECT *\` in queries.
-- No plain text logging of PII.
-- Sanitize all inputs against XSS.
-- Never commit \`.env\` files.`
-        }
-      ]
-    },
-    {
-      id: "02-code-style",
-      name: "02_code-style",
-      purpose: "To enforce consistency across all generated code.",
-      color: "codeStyle",
-      files: [
-        {
-          id: "conventions",
-          name: "conventions.md",
-          content: `# Code Conventions
-
-## Formatting
-
-- **Indentation:** 2 Spaces.
-- **Quotes:** Single quotes for code, Double for JSON.
-- **Strict Mode:** TypeScript strict mode ON.
-
-## Readability
-
-- Max line length: 100 chars.
-- Comment complex logic.
-
-## Python
-
-- Use f-strings for string interpolation
-- Type hints where appropriate
-- Docstrings for functions/classes
-- \`.env\` for credentials (never commit)`
-        },
-        {
-          id: "naming",
-          name: "naming.md",
-          content: `# Naming Conventions
-
-- **Variables:** \`camelCase\`
-- **Constants:** \`UPPER_SNAKE_CASE\`
-- **Components/Classes:** \`PascalCase\`
-- **Files/Folders:** \`kebab-case\``
-        }
-      ]
-    },
-    {
-      id: "03-database",
-      name: "03_database",
-      purpose: "Schema integrity and query performance standards.",
-      color: "database",
-      files: [
-        {
-          id: "schemas",
-          name: "schemas.md",
-          content: `# Database Schemas
-
-## Standards
-
-- All tables need \`id\`, \`created_at\`, \`updated_at\`.
-- Use UUIDs for PKs.
-- FKs must be indexed.
-- Table names: Plural \`snake_case\`.`
-        },
-        {
-          id: "queries",
-          name: "queries.md",
-          content: `# Query Standards
-
-- Specify columns explicitly.
-- Use Cursor-based pagination.
-- Wrap writes in transactions.`
-        }
-      ]
-    },
-    {
-      id: "04-design",
-      name: "04_design",
-      purpose: "UI/UX consistency and brand alignment.",
-      color: "design",
-      files: [
-        {
-          id: "ui-guidelines",
-          name: "ui-guidelines.md",
-          content: `# UI Guidelines
-
-- **Framework:** Tailwind CSS.
-- **Mobile-First:** Design starts at mobile breakpoint.
-- **Accessibility:** Contrast ratio 4.5:1 minimum.`
-        },
-        {
-          id: "ux-principles",
-          name: "ux-principles.md",
-          content: `# UX Principles
-
-- **Feedback:** Every action needs a visual state (loading, success).
-- **Clarity:** Human-readable error messages.
-- **Safety:** Easy "Back" or "Cancel" actions.`
-        }
-      ]
-    },
-    {
-      id: "05-structuring",
-      name: "05_structuring",
-      purpose: "The skeleton of the application architecture.",
-      color: "structure",
-      files: [
-        {
-          id: "architecture",
-          name: "architecture.md",
-          content: `# System Architecture
-
-## Layers
-
-1. Presentation (UI)
-2. API (Controllers)
-3. Business Logic (Services)
-4. Data Access (Repositories)
-
-## Pattern
-
-- Feature-based folder structure.
-- Dependency Injection for services.`
-        },
-        {
-          id: "project-layout",
-          name: "project-layout.md",
-          content: `# Standard File Structure
-
-\`\`\`
-/src
-  /components    # Reusable UI
-  /modules       # Feature folders
-  /services      # API/Business Logic
-  /utils         # Helpers
-\`\`\``
-        }
-      ]
-    },
-    {
-      id: "06-bug-fixes",
-      name: "06_bug-fixes",
-      purpose: "A history of errors to prevent recurrence.",
-      color: "bugs",
-      files: [
-        {
-          id: "known-issues",
-          name: "known-issues.md",
-          content: `# Known Issues
-
-## nooz.news OpenGraph
-
-- **Date:** 2026-02-07
-- **Issue:** Article links show generic homepage OG tags instead of article-specific
-- **Status:** Workaround in place (\`generate-og-pages.js\`), awaiting Next.js migration
-
-## THE DAILY DOUBLE Voice
-
-- **Date:** 2026-02-06
-- **Issue:** Only 1 ElevenLabs voice - Alex & Sam sound the same
-- **Status:** Open - Need second voice ID for true two-host experience`
-        }
-      ]
-    },
-    {
-      id: "07-testing",
-      name: "07_testing",
-      purpose: "Quality control standards.",
-      color: "testing",
-      files: [
-        {
-          id: "test-cases",
-          name: "test-cases.md",
-          content: `# Testing Protocols
-
-- **Coverage Goal:** 80% minimum.
-- **Types:** Unit, Integration, E2E.
-- **Critical Paths:** 100% coverage required.`
-        }
-      ]
-    },
-    {
-      id: "90-workspaces",
-      name: "90_workspaces",
-      purpose: "Dynamic folders for active projects. This prevents mixing objectives between projects.",
-      color: "workspace",
-      files: [],
-      subfolders: [
-        algoTraderWorkspace,
-        missionControlWorkspace,
-        {
-          id: "clean-and-suite",
-          name: "clean-and-suite",
-          purpose: "Enterprise dry-cleaning management platform workspace.",
-          color: "workspace",
-          files: [
-            {
-              id: "cas-context",
-              name: "context.md",
-              content: `# Workspace: Clean and Suite
-
-## Objective
-
-Enterprise dry-cleaning management platform.
-
-## Tech Constraints
-
-- **Payment:** Stripe
-- **Maps:** Google Maps API
-
-## Status
-
-- **Phase:** Beta
-- **Next Milestone:** Payment Integration`
-            }
-          ]
-        },
-        {
-          id: "the-daily-double",
-          name: "the-daily-double",
-          purpose: "Automated daily short-form video pipeline for TikTok/YouTube Shorts",
-          color: "workspace",
-          files: [
-            {
-              id: "tdd-context",
-              name: "context.md",
-              content: `# Workspace: THE DAILY DOUBLE
-
-## Objective
-
-Automated daily short-form video pipeline for tech news.
-
-## Tech Stack
-
-- **LLM:** MiniMax M2.1 (for witty scripts)
-- **TTS:** ElevenLabs (voice_id: 56AoDkrOh6qfVPDXZ7Pt)
-- **Video:** FFmpeg + PIL for image generation
-- **RSS Sources:** TechCrunch, The Verge, Wired
-
-## Credentials (.env)
-
-- ELEVENLABS_API_KEY
-- ELEVENLABS_VOICE_ID (currently only one)
-- MMAX_M2.1_API (MiniMax for scripts)
-
-## Video Format
-
-- **Length:** 2.5-3 minutes
-- **Aspect:** 9:16 vertical (1080x1920)
-- **Hosts:** Alex & Sam (The Nooz Brief)
-- **Style:** Conversational, witty, not a news report
-
-## Known Issues
-
-- **Only 1 ElevenLabs voice** — Alex & Sam sound the same
-- **Need:** Second voice ID for true two-host experience
-
-## Status
-
-- **Phase:** Production
-- **Workflow:** RSS scrape → LLM script → TTS → FFmpeg video → Upload`
-            }
-          ]
-        },
-        {
-          id: "nooz-news",
-          name: "nooz-news",
-          purpose: "AI news aggregator website (Nooz.news)",
-          color: "workspace",
-          files: [
-            {
-              id: "nn-context",
-              name: "context.md",
-              content: `# Workspace: nooz.news
-
-## Objective
-
-AI-powered news aggregation website.
-
-## Tech Stack
-
-- Built with Lovable (static export)
-- Vercel hosting
-
-## OpenGraph Issue (Feb 7, 2026)
-
-**Problem:** Article links show generic homepage OG tags instead of article-specific
-
-**Workaround Created:** \`generate-og-pages.js\` creates static OG pages
-
-**Future Fix:** Regenerate as Next.js (not static export) for Edge Functions
-
-## Status
-
-- **Phase:** Live with OG workaround`
-            }
-          ]
-        },
-        sellsigWorkspace
-      ]
-    },
-    {
-      id: "99-archive",
-      name: "99_archive",
-      purpose: "Prevents reuse of bad code or old patterns.",
-      color: "archive",
-      files: [
-        {
-          id: "deprecated",
-          name: "deprecated.md",
-          content: `# Deprecated Standards
-
-## DO NOT USE
-
-- Bootstrap (Use Tailwind)
-- Basic Auth (Use JWT)
-- \`var\` keyword (Use \`const\`/\`let\`)`
-        }
-      ]
-    }
-  ]
+const PRIORITY_RANK: Record<ChunkPriority, number> = {
+  critical: 3, normal: 2, ephemeral: 1,
 };
 
-// Helper to get all workspaces for the selector
-export function getWorkspaces(): { id: string; name: string; purpose: string }[] {
-  const workspacesFolder = knowledgeTree.folders.find(f => f.id === "90-workspaces");
-  if (!workspacesFolder?.subfolders) return [];
-  return workspacesFolder.subfolders.map(ws => ({
-    id: ws.id,
-    name: ws.name,
-    purpose: ws.purpose,
-  }));
+function colorFor(folderName: string): FolderColor {
+  const n = folderName.toLowerCase();
+  if (n.includes("compliance")) return "compliance";
+  if (n.includes("code") || n.includes("style")) return "codeStyle";
+  if (n.includes("database") || n.includes("db") || n.includes("schema")) return "database";
+  if (n.includes("design") || n.includes("ui")) return "design";
+  if (n.includes("structur")) return "structure";
+  if (n.includes("bug") || n.includes("issue")) return "bugs";
+  if (n.includes("test")) return "testing";
+  if (n.includes("workspace") || n.includes("project")) return "workspace";
+  if (n.includes("archive") || n.includes("old")) return "archive";
+  return "structure";
 }
 
-// Helper to concatenate all files in a workspace into a single markdown bundle
-function collectFiles(folder: KnowledgeFolder): KnowledgeFile[] {
-  const files = [...folder.files];
-  if (folder.subfolders) {
-    for (const sub of folder.subfolders) {
-      files.push(...collectFiles(sub));
-    }
+/** Group chunks by file_path, concatenate content in chunk_index order. */
+export function chunksToFiles(chunks: MemoryChunk[]): KnowledgeFile[] {
+  const byPath = new Map<string, MemoryChunk[]>();
+  for (const c of chunks) {
+    const arr = byPath.get(c.file_path) ?? [];
+    arr.push(c);
+    byPath.set(c.file_path, arr);
   }
+
+  const files: KnowledgeFile[] = [];
+  for (const [path, group] of byPath.entries()) {
+    group.sort((a, b) => a.chunk_index - b.chunk_index);
+    const content = group.map((g) => g.content).join("\n\n");
+    let topPriority: ChunkPriority = "ephemeral";
+    let lastUpdated = group[0].updated_at;
+    for (const g of group) {
+      if (PRIORITY_RANK[g.priority] > PRIORITY_RANK[topPriority]) topPriority = g.priority;
+      if (g.updated_at > lastUpdated) lastUpdated = g.updated_at;
+    }
+    const name = path.split("/").pop() || path;
+    files.push({
+      id: path,
+      name,
+      path,
+      content,
+      priority: topPriority,
+      lastUpdated,
+      chunkCount: group.length,
+      workspace_id: group[0].workspace_id,
+      scope: group[0].scope,
+    });
+  }
+  files.sort((a, b) => a.path.localeCompare(b.path));
   return files;
 }
 
-export function getWorkspaceBundle(workspaceId: string): string | null {
-  const workspacesFolder = knowledgeTree.folders.find(f => f.id === "90-workspaces");
-  const ws = workspacesFolder?.subfolders?.find(s => s.id === workspaceId);
-  if (!ws) return null;
+/** Build a folder tree from KnowledgeFiles, splitting on `/`. */
+export function buildFolderTree(files: KnowledgeFile[]): KnowledgeFolder[] {
+  const root: KnowledgeFolder = {
+    id: "__root__", name: "root", path: "", files: [], subfolders: [], color: "structure",
+  };
 
-  const allFiles = collectFiles(ws);
-  if (allFiles.length === 0) return null;
-
-  const parts = [`# WORKSPACE: ${ws.name}\n`];
-  for (const file of allFiles) {
-    parts.push(`---\n## FILE: ${file.name}\n${file.content}`);
+  for (const file of files) {
+    const parts = file.path.split("/");
+    const folderParts = parts.slice(0, -1);
+    let cursor = root;
+    let acc = "";
+    for (const p of folderParts) {
+      acc = acc ? `${acc}/${p}` : p;
+      let next = cursor.subfolders.find((f) => f.path === acc);
+      if (!next) {
+        next = { id: acc, name: p, path: acc, files: [], subfolders: [], color: colorFor(p) };
+        cursor.subfolders.push(next);
+      }
+      cursor = next;
+    }
+    cursor.files.push(file);
   }
-  return parts.join('\n');
+
+  const sortFolder = (f: KnowledgeFolder) => {
+    f.subfolders.sort((a, b) => a.name.localeCompare(b.name));
+    f.files.sort((a, b) => a.name.localeCompare(b.name));
+    f.subfolders.forEach(sortFolder);
+  };
+  sortFolder(root);
+  return root.subfolders;
+}
+
+/** Fetch all chunks for a workspace (or scope=global if workspaceId is null/'global'). */
+export async function fetchChunks(workspaceId: string | null): Promise<MemoryChunk[]> {
+  let q = supabase
+    .from("memory_chunks")
+    .select("*")
+    .eq("user_id", SINGLE_USER_ID)
+    .is("superseded_by", null)
+    .order("file_path", { ascending: true })
+    .order("chunk_index", { ascending: true });
+
+  if (workspaceId === null || workspaceId === "global") {
+    q = q.eq("scope", "global");
+  } else {
+    q = q.eq("workspace_id", workspaceId);
+  }
+
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as MemoryChunk[];
+}
+
+/** Distinct workspace IDs present in memory_chunks (plus a synthetic 'global'). */
+export async function fetchWorkspaces(): Promise<Workspace[]> {
+  const { data, error } = await supabase
+    .from("memory_chunks")
+    .select("workspace_id")
+    .eq("user_id", SINGLE_USER_ID)
+    .not("workspace_id", "is", null);
+  if (error) throw error;
+  const ids = new Set<string>();
+  for (const row of (data ?? []) as { workspace_id: string | null }[]) {
+    if (row.workspace_id) ids.add(row.workspace_id);
+  }
+  const list: Workspace[] = Array.from(ids).sort().map((id) => ({ id, name: id }));
+  return [{ id: "global", name: "global" }, ...list];
+}
+
+/** Fetch the SYSTEM_PROMPT chunks (file_path containing 'SYSTEM_PROMPT'). */
+export async function fetchSystemPrompt(): Promise<KnowledgeFile | null> {
+  const { data, error } = await supabase
+    .from("memory_chunks")
+    .select("*")
+    .eq("user_id", SINGLE_USER_ID)
+    .ilike("file_path", "%SYSTEM_PROMPT%")
+    .is("superseded_by", null)
+    .order("chunk_index", { ascending: true });
+  if (error) throw error;
+  const chunks = (data ?? []) as MemoryChunk[];
+  if (chunks.length === 0) return null;
+  const files = chunksToFiles(chunks);
+  return files[0] ?? null;
+}
+
+/** Concatenate all chunks of a workspace into a single bundle string for copy. */
+export async function getWorkspaceBundle(workspaceId: string): Promise<string> {
+  const chunks = await fetchChunks(workspaceId);
+  const files = chunksToFiles(chunks);
+  return files.map((f) => `# ${f.path}\n\n${f.content}`).join("\n\n---\n\n");
+}
+
+/** Server-side semantic search via Lovable Cloud edge function. */
+export interface SearchResult {
+  id: string;
+  workspace_id: string | null;
+  scope: ChunkScope;
+  content: string;
+  priority: ChunkPriority;
+  file_path: string;
+  source: ChunkSource;
+  similarity: number;
+}
+
+export async function semanticSearch(
+  query: string,
+  workspaceId: string | null,
+  topK = 10,
+): Promise<SearchResult[]> {
+  const { data, error } = await lovableCloud.functions.invoke("search-chunks", {
+    body: { query, workspace_id: workspaceId === "global" ? null : workspaceId, top_k: topK },
+  });
+  if (error) throw error;
+  return (data?.chunks ?? []) as SearchResult[];
 }
