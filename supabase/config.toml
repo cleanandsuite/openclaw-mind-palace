@@ -1,1 +1,4 @@
 project_id = "kffrsxjwgrhakftbquru"
+
+[functions.search-chunks]
+verify_jwt = false
