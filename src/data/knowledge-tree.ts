@@ -72,13 +72,21 @@ function colorFor(folderName: string): FolderColor {
   return "structure";
 }
 
+/** Normalize a file_path to forward-slashes and strip leading "./" or "../" noise. */
+function normalizePath(p: string): string {
+  let out = p.replace(/\\/g, "/");
+  out = out.replace(/^(\.\.?\/)+/, "");
+  return out;
+}
+
 /** Group chunks by file_path, concatenate content in chunk_index order. */
 export function chunksToFiles(chunks: MemoryChunk[]): KnowledgeFile[] {
   const byPath = new Map<string, MemoryChunk[]>();
   for (const c of chunks) {
-    const arr = byPath.get(c.file_path) ?? [];
+    const path = normalizePath(c.file_path);
+    const arr = byPath.get(path) ?? [];
     arr.push(c);
-    byPath.set(c.file_path, arr);
+    byPath.set(path, arr);
   }
 
   const files: KnowledgeFile[] = [];
