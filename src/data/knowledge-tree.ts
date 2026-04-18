@@ -148,7 +148,8 @@ export async function fetchChunks(workspaceId: string | null): Promise<MemoryChu
     .eq("user_id", SINGLE_USER_ID)
     .is("superseded_by", null)
     .order("file_path", { ascending: true })
-    .order("chunk_index", { ascending: true });
+    .order("chunk_index", { ascending: true })
+    .limit(5000);
 
   if (workspaceId === null || workspaceId === "global") {
     q = q.eq("scope", "global");
@@ -156,7 +157,11 @@ export async function fetchChunks(workspaceId: string | null): Promise<MemoryChu
     q = q.eq("workspace_id", workspaceId);
   }
 
-  const { data, error } = await q;
+  // eslint-disable-next-line no-console
+  console.log("[fetchChunks] querying", { workspaceId, user_id: SINGLE_USER_ID });
+  const { data, error, status } = await q;
+  // eslint-disable-next-line no-console
+  console.log("[fetchChunks] result", { status, error, rowCount: data?.length ?? 0, sample: data?.[0] });
   if (error) throw error;
   return (data ?? []) as MemoryChunk[];
 }
